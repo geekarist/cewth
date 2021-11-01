@@ -7,6 +7,20 @@
 (defonce state (atom 0))
 
 (defn root-component []
+  [:div.root-ctn
+   [:div.search-ctn
+    [:input {:type "text"}]
+    [:button {:on-click #(println "Yo")} "Search"]]
+   [:div.result-ctn
+    [:div "Bourron Marlotte, Île-de-France"]
+    [:div.temperature-ctn
+     [:img.weather-icn {:src "TODO"}]
+     [:span.temperature-lbl "14"]
+     [:span.unit-lbl "℃"]]
+    [:div.weather-text-blk "Mostly cloudy"]
+    [:div.update-date-blk "Updated as of 15:40"]]])
+
+(defn root-component-2 []
   [:div
    [:div.logos
     [:img.electron {:src "img/electron-logo.png"}]
