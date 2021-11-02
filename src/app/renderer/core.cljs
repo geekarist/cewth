@@ -14,7 +14,7 @@
    [:div.result-ctn
     [:div "Bourron Marlotte, Île-de-France"]
     [:div.temperature-ctn
-     [:img.weather-icn {:src "TODO"}]
+     [:img.weather-icn {:src "http://localhost:3000/developer.accuweather.com/sites/default/files/13-s.png"}]
      [:span.temperature-lbl "14"]
      [:span.unit-lbl "℃"]]
     [:div.weather-text-blk "Mostly cloudy"]
