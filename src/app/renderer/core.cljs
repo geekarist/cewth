@@ -12,7 +12,7 @@
     [:input {:type "text"}]
     [:button {:on-click #(println "Yo")} "Search"]]
    [:div.result-ctn
-    [:div "Bourron Marlotte, Île-de-France"]
+    [:div.location-ctn "Bourron Marlotte, Île-de-France"]
     [:div.temperature-ctn
      [:img.weather-icn {:src "http://localhost:3000/developer.accuweather.com/sites/default/files/13-s.png"}]
      [:span.temperature-lbl "14"]
