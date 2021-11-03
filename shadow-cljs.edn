@@ -13,4 +13,4 @@
                      :output-dir "resources/public/js"
                      :asset-path "js"
                      :modules {:renderer {:init-fn app.renderer.core/start!}}
-                     :build-hooks [(dev.core/hello-hook)]}}}
+                     :build-hooks [(dev.core/build-normlz-css)]}}}
