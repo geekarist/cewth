@@ -9,8 +9,8 @@
 (defn root-component []
   [:div.root-ctn
    [:div.search-ctn
-    [:input {:type "text"}]
-    [:button {:on-click #(println "Yo")} "Search"]]
+    [:input.search-txt {:type "text"}]
+    [:button.search-btn {:on-click #(println "Yo")} "Search"]]
    [:div.result-ctn
     [:div.location-ctn "Bourron Marlotte, Île-de-France"]
     [:div.temperature-ctn

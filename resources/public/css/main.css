@@ -12,10 +12,16 @@ body {
   margin: 8px;
   margin-left: auto;
   margin-right: auto;
+  margin-top: 32px;
+  text-align: center;
 }
 
 .search-ctn {
   margin-bottom: 8px;
+}
+
+.search-txt {
+  margin-right: 8px;
 }
 
 .location-ctn {
@@ -33,6 +39,7 @@ body {
 }
 
 .weather-icn {
+  margin-left: auto;
 }
 
 .temperature-lbl {
@@ -41,6 +48,7 @@ body {
 
 .unit-lbl {
   font-size: xxx-large;
+  margin-right: auto;
 }
 
 .weather-text-blk {
