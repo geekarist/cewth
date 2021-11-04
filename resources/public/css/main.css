@@ -17,7 +17,7 @@ body {
 }
 
 .search-ctn {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
 .search-txt {
@@ -26,6 +26,7 @@ body {
 
 .location-ctn {
   margin-bottom: 8px;
+  font-size: x-large;
 }
 
 .result-ctn {
@@ -53,4 +54,9 @@ body {
 
 .weather-text-blk {
   margin-bottom: 8px;
+  font-size: larger;
+}
+
+.update-date-blk {
+  font-size: small;
 }
