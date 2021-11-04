@@ -20,16 +20,6 @@
     [:div.weather-text-blk "Mostly cloudy"]
     [:div.update-date-blk "Updated as of 15:40"]]])
 
-(defn root-component-2 []
-  [:div
-   [:div.logos
-    [:img.electron {:src "img/electron-logo.png"}]
-    [:img.cljs {:src "img/cljs-logo.svg"}]
-    [:img.reagent {:src "img/reagent-logo.png"}]]
-   [:button
-    {:on-click #(swap! state inc)}
-    (str "Clicked " @state " times")]])
-
 (defn ^:dev/after-load start! []
   (rd/render
    [root-component]
