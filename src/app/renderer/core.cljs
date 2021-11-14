@@ -14,14 +14,15 @@
                       :updated-at "Updated as of 15:40"}))
 
 (defn- update-state-query [state new-query]
-  (println new-query)
   (assoc state :query new-query))
 
 (defn- update-state-result [state new-result]
-  (assoc state :location (new-result :name)))
+  (assoc state
+         :location (new-result :name)
+         :successful (new-result :successful)))
 
 (defn- search! [query consume-query-result]
-  (letfn ^{:doc "Steps to search"}
+  (letfn #_(Define steps to search)
 
    [#_(1. Create city search request)
     (to-city-search-req
@@ -40,9 +41,9 @@
 
     #_(3. Convert city search response to query result)
     (to-query-result
-     [city-search-resp]
-     {:name (-> city-search-resp
-                (second)
+     [[ok? city-search-resp]]
+     {:successful ok?
+      :name (-> city-search-resp
                 (first)
                 (get "LocalizedName"))})]
 
@@ -62,15 +63,18 @@
   [:div.root-ctn
    [:div.search-ctn
     [:input.search-txt {:type "text"
-                        :on-change #(swap! state 
-                                           update-state-query 
+                        :on-change #(swap! state
+                                           update-state-query
                                            (.-value (.-target %)))}]
     [:button.search-btn
-     {:on-click 
+     {:on-click
       (fn []
         (search! (@state :query)
                  #(swap! state update-state-result %)))}
-     "Search"]]
+     "Search"]
+    (if (@state :successful)
+      nil
+      [:span.search-warn "⚠️"])]
    [:div.result-ctn
     [:div.location-ctn (@state :location)]
     [:div.temperature-ctn

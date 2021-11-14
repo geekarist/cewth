@@ -24,6 +24,10 @@ body {
   margin-right: 8px;
 }
 
+.search-warn {
+  margin-left: 8px;
+}
+
 .location-ctn {
   margin-bottom: 8px;
   font-size: x-large;
