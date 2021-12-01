@@ -65,7 +65,13 @@
     [:input.search-txt {:type "text"
                         :on-change #(swap! state
                                            update-state-query
-                                           (.-value (.-target %)))}]
+                                           (.-value (.-target %)))
+                        :on-key-down
+                        (fn [event]
+                          (if (= (.-key event) "Enter")
+                            (search! (@state :query)
+                                     #(swap! state update-state-result %))
+                            nil))}]
     [:button.search-btn
      {:on-click
       (fn []
