@@ -5,13 +5,7 @@
 
 (enable-console-print!)
 
-(defonce state (atom {:query ""
-                      :location "Bourron Marlotte, Île-de-France"
-                      :icon-src "http://localhost:3000/developer.accuweather.com/sites/default/files/13-s.png"
-                      :temperature-val 16
-                      :temperature-unit "℃"
-                      :weather-text "Mostly cloudy"
-                      :updated-at "Updated as of 15:40"}))
+(defonce state (atom {}))
 
 (defn- update-state-query [state new-query]
   (assoc state :query new-query))
@@ -19,7 +13,7 @@
 (defn- update-state-result [state new-result]
   (assoc state
          :location (new-result :name)
-         :successful (new-result :successful)))
+         :failed (new-result :failed)))
 
 (defn- search! [query consume-query-result]
   (letfn #_(Define steps to search)
@@ -42,7 +36,7 @@
     #_(3. Convert city search response to query result)
     (to-query-result
      [[ok? city-search-resp]]
-     {:successful ok?
+     {:failed (not ok?)
       :name (-> city-search-resp
                 (first)
                 (get "LocalizedName"))})]
@@ -59,28 +53,30 @@
 (comment
   (search! "monti" #(println "Result: " %)))
 
+(defn- change-query! [query]
+  (swap! state
+         update-state-query
+         query))
+
+(defn- execute-query! [trigger]
+  (if (= trigger "Enter")
+    (search! (@state :query)
+             #(swap! state update-state-result %))
+    nil))
+
 (defn root-component []
   [:div.root-ctn
    [:div.search-ctn
-    [:input.search-txt {:type "text"
-                        :on-change #(swap! state
-                                           update-state-query
-                                           (.-value (.-target %)))
-                        :on-key-down
-                        (fn [event]
-                          (if (= (.-key event) "Enter")
-                            (search! (@state :query)
-                                     #(swap! state update-state-result %))
-                            nil))}]
+    [:input.search-txt
+     {:type "text"
+      :on-change #(change-query! (.-value (.-target %)))
+      :on-key-down #(execute-query! (.-key %))}]
     [:button.search-btn
-     {:on-click
-      (fn []
-        (search! (@state :query)
-                 #(swap! state update-state-result %)))}
+     {:on-click #(execute-query! "Enter")}
      "Search"]
-    (if (@state :successful)
-      nil
-      [:span.search-warn "⚠️"])]
+    (if (@state :failed)
+      [:span.search-warn "⚠️"]
+      nil)]
    [:div.result-ctn
     [:div.location-ctn (@state :location)]
     [:div.temperature-ctn
