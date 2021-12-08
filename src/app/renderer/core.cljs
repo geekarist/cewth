@@ -5,8 +5,6 @@
 
 (enable-console-print!)
 
-(defonce state (atom {}))
-
 (defn- update-state-query [state new-query]
   (assoc state :query new-query))
 
@@ -53,6 +51,10 @@
 (comment
   (search! "monti" #(println "Result: " %)))
 
+(def init {})
+
+(defonce state (atom init))
+
 (defn- change-query! [query]
   (swap! state
          update-state-query
@@ -64,15 +66,18 @@
              #(swap! state update-state-result %))
     nil))
 
-(defn root-component []
+(defn update []
+  "todo")
+
+(defn view [dispatch]
   [:div.root-ctn
    [:div.search-ctn
     [:input.search-txt
      {:type "text"
-      :on-change #(change-query! (.-value (.-target %)))
-      :on-key-down #(execute-query! (.-key %))}]
+      :on-change #(dispatch [:change-query (.-value (.-target %))]) 
+      :on-key-down #(dispatch [:execute-query (.-key %)])}]
     [:button.search-btn
-     {:on-click #(execute-query! "Enter")}
+     {:on-click #(dispatch [:execute-query "Enter"])}
      "Search"]
     (if (@state :failed)
       [:span.search-warn "⚠️"]
@@ -86,9 +91,14 @@
     [:div.weather-text-blk (@state :weather-text)]
     [:div.update-date-blk (@state :updated-at)]]])
 
+(defn dispatch [[event arg :as _action]]
+  (condp = event
+    :change-query (change-query! arg)
+    :execute-query (execute-query! arg)))
+
 (defn ^:dev/after-load start! []
   (rd/render
-   [root-component]
+   [view dispatch]
    (js/document.getElementById "app-container")))
 
 (comment
