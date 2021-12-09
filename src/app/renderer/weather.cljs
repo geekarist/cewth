@@ -3,6 +3,42 @@
    [ajax.core :as ajx]
    [reagent.core :refer [atom]]))
 
+(declare dispatch init state handle)
+
+(def init {})
+
+(defn update-fn [[action arg] state]
+  (condp = action
+    :change-query [state [:change-query arg]]
+    :execute-query [state [:execute-query arg]]
+    :take-search-result
+    [(assoc state
+            :location (arg :name)
+            :failed (arg :failed))
+     nil]))
+
+(defn view [_init _update-fn]
+  [:div.root-ctn
+   [:div.search-ctn
+    [:input.search-txt
+     {:type "text"
+      :on-change #(dispatch [:change-query (.-value (.-target %))])
+      :on-key-down #(dispatch [:execute-query (.-key %)])}]
+    [:button.search-btn
+     {:on-click #(dispatch [:execute-query "Enter"])}
+     "Search"]
+    (if (@state :failed)
+      [:span.search-warn "⚠️"]
+      nil)]
+   [:div.result-ctn
+    [:div.location-ctn (@state :location)]
+    [:div.temperature-ctn
+     [:img.weather-icn {:src (@state :icon-src)}]
+     [:span.temperature-lbl (@state :temperature-val)]
+     [:span.unit-lbl (@state :temperature-unit)]]
+    [:div.weather-text-blk (@state :weather-text)]
+    [:div.update-date-blk (@state :updated-at)]]])
+
 (defn- search! [query consume-query-result]
   (letfn #_(Define steps to search)
 
@@ -38,14 +74,13 @@
                (to-query-result)
                (consume-query-result)))))))
 
-(comment
-  (search! "monti" #(println "Result: " %)))
-
-(def init {})
+(defn- dispatch [action]
+  (let [new-state-vec (update-fn action @state)
+        [new-state effect] new-state-vec]
+    (compare-and-set! state @state new-state)
+    (handle effect)))
 
 (defonce state (atom init)) ; Causes a cyclic dependency by requiring rd/atom?
-
-(declare dispatch)
 
 (defn- change-query! [query]
   (compare-and-set! state
@@ -66,48 +101,9 @@
           :location (result :name)
           :failed (result :failed))))
 
-(defn update-fn [[action arg] state]
-  (condp = action
-    :change-query [state [:change-query arg]]
-    :execute-query [state [:execute-query arg]]
-    :take-search-result
-    [(assoc state
-            :location (arg :name)
-            :failed (arg :failed))
-     nil]))
-
-(defn view [dispatch]
-  [:div.root-ctn
-   [:div.search-ctn
-    [:input.search-txt
-     {:type "text"
-      :on-change #(dispatch [:change-query (.-value (.-target %))])
-      :on-key-down #(dispatch [:execute-query (.-key %)])}]
-    [:button.search-btn
-     {:on-click #(dispatch [:execute-query "Enter"])}
-     "Search"]
-    (if (@state :failed)
-      [:span.search-warn "⚠️"]
-      nil)]
-   [:div.result-ctn
-    [:div.location-ctn (@state :location)]
-    [:div.temperature-ctn
-     [:img.weather-icn {:src (@state :icon-src)}]
-     [:span.temperature-lbl (@state :temperature-val)]
-     [:span.unit-lbl (@state :temperature-unit)]]
-    [:div.weather-text-blk (@state :weather-text)]
-    [:div.update-date-blk (@state :updated-at)]]])
-
-(defn handle [[effect-key effect-arg :as effect-vec]]
+(defn- handle [[effect-key effect-arg :as effect-vec]]
   (condp = effect-key
     :change-query (change-query! effect-arg)
     :execute-query (execute-query! effect-arg)
     :take-search-result (take-search-result! effect-arg)
     (println "Unknown effect:" [effect-vec])))
-
-(defn dispatch [action]
-  (let [new-state-vec (update-fn action @state)
-        [new-state effect] new-state-vec]
-    (compare-and-set! state @state new-state)
-    (handle effect)))
-

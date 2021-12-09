@@ -5,10 +5,15 @@
 
 (enable-console-print!)
 
-(defn ^:dev/after-load start! []
+(defn runtime [init update-fn view]
   (rd/render
-   [weather/view weather/dispatch]
+   [view init update-fn]
    (js/document.getElementById "app-container")))
+
+(defn ^:dev/after-load start! []
+  (runtime weather/init 
+           weather/update-fn 
+           weather/view))
 
 (comment
   start!)
