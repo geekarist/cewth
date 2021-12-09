@@ -71,13 +71,10 @@
     :change-query [state [:change-query arg]]
     :execute-query [state [:execute-query arg]]
     :take-search-result
-    (do
-      (println "Arg:" arg)
-      (println "State:" state)
-      [(assoc state
-              :location (arg :name)
-              :failed (arg :failed))
-       nil])))
+    [(assoc state
+            :location (arg :name)
+            :failed (arg :failed))
+     nil]))
 
 (defn view [dispatch]
   [:div.root-ctn
@@ -102,7 +99,6 @@
     [:div.update-date-blk (@state :updated-at)]]])
 
 (defn handle [[effect-key effect-arg :as effect-vec]]
-  (println "Effect key:" effect-key)
   (condp = effect-key
     :change-query (change-query! effect-arg)
     :execute-query (execute-query! effect-arg)
@@ -111,9 +107,7 @@
 
 (defn dispatch [action]
   (let [new-state-vec (update-fn action @state)
-        _ (println "New state:" new-state-vec)
         [new-state effect] new-state-vec]
-    (println "Effect:" effect)
-    (handle effect)
-    (compare-and-set! state @state new-state)))
+    (compare-and-set! state @state new-state)
+    (handle effect)))
 
