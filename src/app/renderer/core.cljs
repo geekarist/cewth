@@ -1,19 +1,19 @@
 (ns app.renderer.core
   (:require
    [reagent.dom :as rd]
-   [app.renderer.weather :as weather]))
+   [app.renderer.weather :as weather]
+   [reagent.core :as rc]))
 
 (enable-console-print!)
 
-(defn runtime [init update-fn view]
+(defn runtime [view init element-id]
   (rd/render
-   [view init update-fn]
-   (js/document.getElementById "app-container")))
+   [view (rc/atom init)]
+   (js/document.getElementById element-id)))
 
 (defn ^:dev/after-load start! []
-  (runtime weather/init 
-           weather/update-fn 
-           weather/view))
+  (runtime weather/view weather/init "app-container")
+  (runtime weather/view weather/init "app-container-2"))
 
 (comment
   start!)

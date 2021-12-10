@@ -1,23 +1,28 @@
 (ns app.renderer.weather
   (:require
-   [ajax.core :as ajx]
-   [reagent.core :refer [atom]]))
+   [ajax.core :as ajx]))
 
-(declare dispatch init state handle)
+;; State
 
 (def init {})
 
-(defn update-fn [[action arg] state]
-  (condp = action
-    :change-query [state [:change-query arg]]
-    :execute-query [state [:execute-query arg]]
-    :take-search-result
-    [(assoc state
-            :location (arg :name)
-            :failed (arg :failed))
-     nil]))
+;; Update
 
-(defn view [_init _update-fn]
+(defn- update-fn
+  "Pure state update function"
+  [[action arg :as message]
+   state]
+  (condp = action
+    :change-query [(assoc state :query arg) nil]
+    :execute-query [state [:execute-query arg (state :query)]]
+    :take-search-result [(assoc state :location (arg :name)) nil]
+    (println "Unknown action:" message)))
+
+;; View
+
+(defn- view-state
+  "View function. Pure function operating on a state value."
+  [dispatch state-val]
   [:div.root-ctn
    [:div.search-ctn
     [:input.search-txt
@@ -27,17 +32,28 @@
     [:button.search-btn
      {:on-click #(dispatch [:execute-query "Enter"])}
      "Search"]
-    (if (@state :failed)
+    (if (state-val :failed)
       [:span.search-warn "⚠️"]
       nil)]
    [:div.result-ctn
-    [:div.location-ctn (@state :location)]
+    [:div.location-ctn (state-val :location)]
     [:div.temperature-ctn
-     [:img.weather-icn {:src (@state :icon-src)}]
-     [:span.temperature-lbl (@state :temperature-val)]
-     [:span.unit-lbl (@state :temperature-unit)]]
-    [:div.weather-text-blk (@state :weather-text)]
-    [:div.update-date-blk (@state :updated-at)]]])
+     [:img.weather-icn {:src (state-val :icon-src)}]
+     [:span.temperature-lbl (state-val :temperature-val)]
+     [:span.unit-lbl (state-val :temperature-unit)]]
+    [:div.weather-text-blk (state-val :weather-text)]
+    [:div.update-date-blk (state-val :updated-at)]]])
+
+(declare dispatch)
+
+(defn view
+  "View component. Operates on a reagent state atom. 
+   Called each time the atom is changed."
+  [state-ref]
+  (let [dispatch-event (fn [event] (dispatch event state-ref))]
+    (view-state dispatch-event @state-ref)))
+
+;; Effects
 
 (defn- search! [query consume-query-result]
   (letfn #_(Define steps to search)
@@ -74,36 +90,27 @@
                (to-query-result)
                (consume-query-result)))))))
 
-(defn- dispatch [action]
-  (let [new-state-vec (update-fn action @state)
-        [new-state effect] new-state-vec]
-    (compare-and-set! state @state new-state)
-    (handle effect)))
-
-(defonce state (atom init)) ; Causes a cyclic dependency by requiring rd/atom?
-
-(defn- change-query! [query]
-  (compare-and-set! state
-                    @state
-                    (assoc @state :query query)))
-
-(defn- execute-query! [trigger]
+(defn- execute-query! [trigger state-ref dispatch]
   (if (= trigger "Enter")
-    (search! (@state :query)
-             #(dispatch [:take-search-result %]))
+    (search! (@state-ref :query)
+             #(dispatch [:take-search-result %] state-ref))
     nil))
 
-(defn- take-search-result! [result]
-  (compare-and-set!
-   state
-   @state
-   (assoc state
-          :location (result :name)
-          :failed (result :failed))))
-
-(defn- handle [[effect-key effect-arg :as effect-vec]]
+(defn- handle 
+  "Effect handler. Individual effects are applied here."
+  [[effect-key effect-arg :as _effect-vec]
+               state-ref
+               dispatch]
   (condp = effect-key
-    :change-query (change-query! effect-arg)
-    :execute-query (execute-query! effect-arg)
-    :take-search-result (take-search-result! effect-arg)
-    (println "Unknown effect:" [effect-vec])))
+    :execute-query (execute-query! effect-arg state-ref dispatch)
+    nil #_(Ignore nil effect)))
+
+;; Runtime/support
+
+(defn- dispatch 
+  "Event dispatch function. Allows a view or effect to dispatch an event."
+  [action state-ref]
+  (let [new-state-vec (update-fn action @state-ref)
+        [new-state effect] new-state-vec]
+    (compare-and-set! state-ref @state-ref new-state)
+    (handle effect state-ref dispatch)))
