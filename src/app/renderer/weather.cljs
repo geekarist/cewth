@@ -20,7 +20,7 @@
 
 ;; View
 
-(defn- view-state
+(defn- view-fn
   "View function. Pure function operating on a state value."
   [dispatch state-val]
   [:div.root-ctn
@@ -105,7 +105,7 @@
    Called each time the atom is changed."
   [state-ref]
   (let [dispatch-event (fn [event] (dispatch event state-ref))]
-    (view-state dispatch-event @state-ref)))
+    (view-fn dispatch-event @state-ref)))
 
 (defn- dispatch 
   "Event dispatch function. Allows a view or effect to dispatch an event."
