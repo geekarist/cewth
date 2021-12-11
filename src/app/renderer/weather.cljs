@@ -13,9 +13,9 @@
   [[action arg :as message]
    state]
   (condp = action
-    :change-query [(assoc state :query arg) nil]
-    :execute-query [state [:execute-query arg (state :query)]]
-    :take-search-result [(assoc state :location (arg :name)) nil]
+    :ev/change-query [(assoc state :query arg) nil]
+    :ev/execute-query [state [:fx/execute-query arg (state :query)]]
+    :ev/take-search-result [(assoc state :location (arg :name)) nil]
     (println "Unknown action:" message)))
 
 ;; View
@@ -27,10 +27,10 @@
    [:div.search-ctn
     [:input.search-txt
      {:type "text"
-      :on-change #(dispatch [:change-query (.-value (.-target %))])
-      :on-key-down #(dispatch [:execute-query (.-key %)])}]
+      :on-change #(dispatch [:ev/change-query (.-value (.-target %))])
+      :on-key-down #(dispatch [:ev/execute-query (.-key %)])}]
     [:button.search-btn
-     {:on-click #(dispatch [:execute-query "Enter"])}
+     {:on-click #(dispatch [:ev/execute-query "Enter"])}
      "Search"]
     (if (state-val :failed)
       [:span.search-warn "⚠️"]
@@ -86,16 +86,16 @@
 (defn- execute-query! [trigger state-ref dispatch]
   (if (= trigger "Enter")
     (search! (@state-ref :query)
-             #(dispatch [:take-search-result %] state-ref))
+             #(dispatch [:ev/take-search-result %] state-ref))
     nil))
 
 (defn- handle 
   "Effect handler. Individual effects are applied here."
   [[effect-key effect-arg :as _effect-vec]
-               state-ref
-               dispatch]
+   state-ref
+   dispatch]
   (condp = effect-key
-    :execute-query (execute-query! effect-arg state-ref dispatch)
+    :fx/execute-query (execute-query! effect-arg state-ref dispatch)
     nil #_(Ignore nil effect)))
 
 ;; Runtime/support
