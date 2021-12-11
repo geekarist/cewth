@@ -12,8 +12,7 @@
    (js/document.getElementById element-id)))
 
 (defn ^:dev/after-load start! []
-  (runtime weather/view weather/init "app-container")
-  (runtime weather/view weather/init "app-container-2"))
+  (runtime weather/view weather/init "app-container"))
 
 (comment
   start!)

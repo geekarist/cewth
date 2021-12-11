@@ -46,13 +46,6 @@
 
 (declare dispatch)
 
-(defn view
-  "View component. Operates on a reagent state atom. 
-   Called each time the atom is changed."
-  [state-ref]
-  (let [dispatch-event (fn [event] (dispatch event state-ref))]
-    (view-state dispatch-event @state-ref)))
-
 ;; Effects
 
 (defn- search! [query consume-query-result]
@@ -106,6 +99,13 @@
     nil #_(Ignore nil effect)))
 
 ;; Runtime/support
+
+(defn view
+  "View component. Operates on a reagent state atom. 
+   Called each time the atom is changed."
+  [state-ref]
+  (let [dispatch-event (fn [event] (dispatch event state-ref))]
+    (view-state dispatch-event @state-ref)))
 
 (defn- dispatch 
   "Event dispatch function. Allows a view or effect to dispatch an event."
