@@ -55,22 +55,20 @@
           (assoc state
                  :state/location nil
                  :state/failed nil)
-          (assoc state
-                 :state/city-search-req
-                 {:uri (str "http://localhost:3000"
-                            "/dataservice.accuweather.com"
-                            "/locations/v1/cities/search")
-                  :method :get
-                  :params {:q (state :state/query)
-                           :api-key "TODO"}
-                  :format (ajx/json-request-format)
-                  :response-format (ajx/json-response-format)}))
+          state)
 
         new-effect
         (if (and
              (not (str/blank? (state :state/query)))
              (= kbd-key "Enter"))
-          [:fx/search (state :state/city-search-req)]
+          [:fx/search {:uri (str "http://localhost:3000"
+                                 "/dataservice.accuweather.com"
+                                 "/locations/v1/cities/search")
+                       :method :get
+                       :params {:q (state :state/query)
+                                :api-key "TODO"}
+                       :format (ajx/json-request-format)
+                       :response-format (ajx/json-response-format)}]
           nil)]
     
     [new-state new-effect]))
@@ -78,13 +76,13 @@
 (defn- handle-event-execute-city-search
   "Execute query 
    - No state change
-   - Trigger search effect with query value"
-  [state _event-arg]
+   - Effect: search provided request"
+  [state req]
 
   (let [new-state state
 
         new-effect
-        [:fx/search (new-state :state/city-search-req)]]
+        [:fx/search req]]
 
     [new-state new-effect]))
 
