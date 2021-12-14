@@ -6,12 +6,13 @@
 (defn- view-component
   "View component. Operates on a reagent state atom. 
    Called each time the atom is changed."
-  [state-ref update-fn view-fn handle]
-  (let [dispatch-event (fn dispatch [event]
-                         (let [new-state-vec (update-fn event @state-ref)
-                               [new-state effect] new-state-vec]
-                           (compare-and-set! state-ref @state-ref new-state)
-                           (handle effect dispatch)))]
+  [state-ref update-fn view-fn handle-effect!]
+  (let [dispatch-event
+        (fn dispatch [event]
+          (let [new-state-vec (update-fn event @state-ref)
+                [new-state effect] new-state-vec]
+            (compare-and-set! state-ref @state-ref new-state)
+            (handle-effect! effect dispatch)))]
     (view-fn dispatch-event @state-ref)))
 
 (defn run-program
@@ -20,8 +21,8 @@
    - `update-fn`: state update function
    - `view-fn`: view function
    - `handle`: map keys to effects"
-  [init update-fn view-fn handle]
+  [init update-fn view-fn handle-effect!]
   (rd/render
-   [view-component (rc/atom init) update-fn view-fn handle]
+   [view-component (rc/atom init) update-fn view-fn handle-effect!]
    (js/document.getElementById  "app-container")))
 

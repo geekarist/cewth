@@ -9,7 +9,7 @@
   (rgrt/run-program weather/init
                     weather/update-fn
                     weather/view-fn
-                    weather/handle))
+                    weather/handle-effect!))
 
 (comment
   start!)
