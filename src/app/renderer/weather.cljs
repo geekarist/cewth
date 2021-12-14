@@ -2,48 +2,6 @@
   (:require
    [ajax.core :as ajx]))
 
-;; State
-
-(def init {})
-
-;; Update
-
-(defn update-fn
-  "Pure state update function"
-  [[action arg :as message]
-   state]
-  (condp = action
-    :ev/change-query [(assoc state :query arg) nil]
-    :ev/execute-query [state [:fx/execute-query arg (state :query)]]
-    :ev/take-search-result [(assoc state :location (arg :name)) nil]
-    (println "Unknown action:" message)))
-
-;; View
-
-(defn view-fn
-  "View function. Pure function operating on a state value."
-  [dispatch state-val]
-  [:div.root-ctn
-   [:div.search-ctn
-    [:input.search-txt
-     {:type "text"
-      :on-change #(dispatch [:ev/change-query (.-value (.-target %))])
-      :on-key-down #(dispatch [:ev/execute-query (.-key %)])}]
-    [:button.search-btn
-     {:on-click #(dispatch [:ev/execute-query "Enter"])}
-     "Search"]
-    (if (state-val :failed)
-      [:span.search-warn "⚠️"]
-      nil)]
-   [:div.result-ctn
-    [:div.location-ctn (state-val :location)]
-    [:div.temperature-ctn
-     [:img.weather-icn {:src (state-val :icon-src)}]
-     [:span.temperature-lbl (state-val :temperature-val)]
-     [:span.unit-lbl (state-val :temperature-unit)]]
-    [:div.weather-text-blk (state-val :weather-text)]
-    [:div.update-date-blk (state-val :updated-at)]]])
-
 ;; Effects
 
 (defn- search! [query consume-query-result]
@@ -87,6 +45,8 @@
              #(dispatch [:ev/take-search-result %] state-ref))
     nil))
 
+;; Handle effects
+
 (defn handle
   "Effect handler. Individual effects are applied here."
   [[effect-key effect-arg :as _effect-vec]
@@ -95,3 +55,46 @@
   (condp = effect-key
     :fx/execute-query (execute-query! effect-arg state-ref dispatch)
     nil #_(Ignore nil effect)))
+
+;; State
+
+(def init {})
+
+;; Update
+
+(defn update-fn
+  "Pure state update function"
+  [[action arg :as message]
+   state]
+  (condp = action
+    :ev/change-query [(assoc state :query arg) nil]
+    :ev/execute-query [state [:fx/execute-query arg (state :query)]]
+    :ev/take-search-result [(assoc state :location (arg :name)) nil]
+    (println "Unknown action:" message)))
+
+;; View
+
+(defn view-fn
+  "View function. Pure function operating on a state value."
+  [dispatch state-val]
+  [:div.root-ctn
+   [:div.search-ctn
+    [:input.search-txt
+     {:type "text"
+      :on-change #(dispatch [:ev/change-query (.-value (.-target %))])
+      :on-key-down #(dispatch [:ev/execute-query (.-key %)])}]
+    [:button.search-btn
+     {:on-click #(dispatch [:ev/execute-query "Enter"])}
+     "Search"]
+    (if (state-val :failed)
+      [:span.search-warn "⚠️"]
+      nil)]
+   [:div.result-ctn
+    [:div.location-ctn (state-val :location)]
+    [:div.temperature-ctn
+     [:img.weather-icn {:src (state-val :icon-src)}]
+     [:span.temperature-lbl (state-val :temperature-val)]
+     [:span.unit-lbl (state-val :temperature-unit)]]
+    [:div.weather-text-blk (state-val :weather-text)]
+    [:div.update-date-blk (state-val :updated-at)]]])
+
