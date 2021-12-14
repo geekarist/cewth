@@ -5,10 +5,10 @@
 
 ;; Effects
 
-(defn- search! [query dispatch]
+(defn- search! [query dispatch] ;; TODO: query becomes req
   (letfn #_(Define steps to search)
 
-    [#_(1. Create city search request)
+    [#_(1. Create city search request) ;; TODO: Convert to :new-city-search-req event handler
      (to-city-search-req
       [query]
       {:uri "http://localhost:3000/dataservice.accuweather.com/locations/v1/cities/search"
@@ -18,12 +18,12 @@
        :format (ajx/json-request-format)
        :response-format (ajx/json-response-format)})
 
-     #_(2. Send city search request)
+     #_(2. Send city search request) ;; TODO: Keep
      (request-city-search
       [req consume-resp]
       (ajx/ajax-request (assoc req :handler consume-resp)))
 
-     #_(3. Convert city search response to query result)
+     #_(3. Convert city search response to query result) ;; TODO: Convert to :new-city-search-result event handler
      (to-query-result
       [[ok? city-search-resp]]
       {:ev/failed (not ok?)
@@ -31,12 +31,18 @@
                     (first)
                     (get "LocalizedName"))})
 
-     #_(4. Dispatch query result)
+     #_(4. Dispatch query result) ;; TODO: Remove
      (dispatch-query-result
       [query-result]
       (dispatch [:ev/take-search-result query-result]))]
 
     #_(Wire up steps)
+    #_(TODO
+       (ajx/ajax-request
+        (assoc req
+               :handler
+               (fn [result]
+                 (dispatch [:ev/take-search-result result])))))
     (-> query
         (to-city-search-req)
         (request-city-search
