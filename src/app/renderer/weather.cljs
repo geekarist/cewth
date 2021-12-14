@@ -68,28 +68,27 @@
 
 ;; Update
 
-(defn- update-state [action arg state]
-  (condp = action
-    :ev/change-query (assoc state :state/query arg)
+(defn- update-state [event-key event-arg state]
+  (condp = event-key
+    :ev/change-query (assoc state :state/query event-arg)
     :ev/take-search-result
     (assoc state
-           :state/location (arg :fx/name)
-           :state/failed (arg :fx/failed))
+           :state/location (event-arg :fx/name)
+           :state/failed (event-arg :fx/failed))
     state))
 
-(defn- update-effect [action arg state]
-  (condp = action
-    :ev/execute-query [:fx/execute-query arg (state :state/query)]
+(defn- new-effect [event-key event-arg state]
+  (condp = event-key
+    :ev/execute-query [:fx/execute-query event-arg (state :state/query)]
     nil))
 
 (defn update-fn
   "Pure state update function"
-  [[action-key action-arg :as _message]
-   state]
+  [[event-key event-arg :as _event] state]
 
-  (let [state (update-state action-key action-arg state)
-        effect (update-effect action-key action-arg state)]
-    [state effect]))
+  (let [new-state (update-state event-key event-arg state)
+        effect (new-effect event-key event-arg new-state)]
+    [new-state effect]))
 
 ;; View
 
