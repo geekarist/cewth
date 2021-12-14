@@ -4,7 +4,7 @@
 
 ;; Effects
 
-(defn- search! [query consume-query-result]
+(defn- search! [query dispatch]
   (letfn #_(Define steps to search)
 
     [#_(1. Create city search request)
@@ -25,10 +25,10 @@
      #_(3. Convert city search response to query result)
      (to-query-result
       [[ok? city-search-resp]]
-      {:fx/failed (not ok?)
-       :fx/name (-> city-search-resp
-                 (first)
-                 (get "LocalizedName"))})]
+      {:ev/failed (not ok?)
+       :ev/name (-> city-search-resp
+                    (first)
+                    (get "LocalizedName"))})]
 
     #_(Wire up steps)
     (-> query
@@ -37,23 +37,17 @@
          (fn [city-search-resp]
            (-> city-search-resp
                (to-query-result)
-               (consume-query-result)))))))
-
-(defn- execute-query! [trigger state-ref dispatch]
-  (if (= trigger "Enter")
-    (search! (@state-ref :state/query)
-             #(dispatch [:ev/take-search-result %] state-ref))
-    nil))
+               (dispatch)))))))
 
 ;; Handle effects
 
 (defn handle
   "Effect handler. Individual effects are applied here."
   [[effect-key effect-arg :as _effect-vec]
-   state-ref
    dispatch]
   (condp = effect-key
-    :fx/execute-query (execute-query! effect-arg state-ref dispatch)
+    :fx/execute-query (search! effect-arg
+                               #(dispatch [:ev/take-search-result %]))
     nil #_(Ignore nil effect)))
 
 ;; State
@@ -68,26 +62,36 @@
 
 ;; Update
 
-(defn- update-state [event-key event-arg state]
+(defn- update-state [[event-key event-arg :as _event] state]
+  
   (condp = event-key
+    
     :ev/change-query (assoc state :state/query event-arg)
+
     :ev/take-search-result
     (assoc state
-           :state/location (event-arg :fx/name)
-           :state/failed (event-arg :fx/failed))
+           :state/location (event-arg :ev/name)
+           :state/failed (event-arg :ev/failed))
+    
     state))
 
-(defn- new-effect [event-key event-arg state]
+(defn- create-effect [[event-key event-arg :as _event] state]
+
+  (println _event)
   (condp = event-key
-    :ev/execute-query [:fx/execute-query event-arg (state :state/query)]
+
+    :ev/execute-query
+    (if (= event-arg "Enter")
+      [:fx/execute-query (state :state/query)]
+      nil)
+
     nil))
 
 (defn update-fn
   "Pure state update function"
-  [[event-key event-arg :as _event] state]
-
-  (let [new-state (update-state event-key event-arg state)
-        effect (new-effect event-key event-arg new-state)]
+  [event state]
+  (let [new-state (update-state  event state)
+        effect    (create-effect event new-state)]
     [new-state effect]))
 
 ;; View

@@ -11,7 +11,7 @@
                          (let [new-state-vec (update-fn event @state-ref)
                                [new-state effect] new-state-vec]
                            (compare-and-set! state-ref @state-ref new-state)
-                           (handle effect state-ref dispatch)))]
+                           (handle effect dispatch)))]
     (view-fn dispatch-event @state-ref)))
 
 (defn run-program
