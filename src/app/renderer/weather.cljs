@@ -5,55 +5,16 @@
 
 ;; Effects
 
-(defn- search! [query dispatch] ;; TODO: query becomes req
-  (letfn #_(Define steps to search)
-
-    [#_(1. Create city search request) ;; TODO: Convert to :new-city-search-req event handler
-     (to-city-search-req
-      [query]
-      {:uri "http://localhost:3000/dataservice.accuweather.com/locations/v1/cities/search"
-       :method :get
-       :params {:q query
-                :api-key "TODO"}
-       :format (ajx/json-request-format)
-       :response-format (ajx/json-response-format)})
-
-     #_(2. Send city search request) ;; TODO: Keep
-     (request-city-search
-      [req consume-resp]
-      (ajx/ajax-request (assoc req :handler consume-resp)))
-
-     #_(3. Convert city search response to query result) ;; TODO: Convert to :new-city-search-result event handler
-     (to-query-result
-      [[ok? city-search-resp]]
-      {:ev/failed (not ok?)
-       :ev/name (-> city-search-resp
-                    (first)
-                    (get "LocalizedName"))})
-
-     #_(4. Dispatch query result) ;; TODO: Remove
-     (dispatch-query-result
-      [query-result]
-      (dispatch [:ev/take-search-result query-result]))]
-
-    #_(Wire up steps)
-    #_(TODO
-       (ajx/ajax-request
-        (assoc req
-               :handler
-               (fn [result]
-                 (dispatch [:ev/take-search-result result])))))
-    (-> query
-        (to-city-search-req)
-        (request-city-search
-         (fn [city-search-resp]
-           (-> city-search-resp
-               (to-query-result)
-               (dispatch-query-result)))))))
+(defn- search! [req dispatch]
+  (ajx/ajax-request
+   (assoc req
+          :handler
+          (fn [result]
+            (dispatch [:ev/take-city-search-response result])))))
 
 ;; Handle effects
 
-(defn handle
+(defn handle-effect!
   "Effect handler. Individual effects are applied here."
   [[effect-key effect-arg :as _effect-vec]
    dispatch]
@@ -74,43 +35,73 @@
 ;; Update
 
 (defn- handle-event-change-query 
-  "Change query ⇒ add query value"
-  [state event-arg]
-  (let [new-state (assoc state :state/query event-arg)
+  "Change query field:
+   - State change: add query value
+   - No effect"
+  [state query]
+  
+  (let [new-state (assoc state :state/query query)
         new-effect nil]
     [new-state new-effect]))
 
-(defn- handle-event-execute-query
-  "Execute query 
-   - Clear result properties if query is blank
-   - Trigger search effect with query value"
-  [state event-arg]
+(defn- handle-event-send-city-search-req 
+  "Convert query to city search request:
+   - State change: clear query if blank, or create city search request
+   - Effect: trigger search only if query is not blank and kbd key is Enter"
+  [state kbd-key]
 
   (let [new-state
         (if (str/blank? (state :state/query))
           (assoc state
                  :state/location nil
                  :state/failed nil)
-          state)
+          (assoc state
+                 :state/city-search-req
+                 {:uri (str "http://localhost:3000"
+                            "/dataservice.accuweather.com"
+                            "/locations/v1/cities/search")
+                  :method :get
+                  :params {:q (state :state/query)
+                           :api-key "TODO"}
+                  :format (ajx/json-request-format)
+                  :response-format (ajx/json-response-format)}))
 
         new-effect
         (if (and
              (not (str/blank? (state :state/query)))
-             (= event-arg "Enter"))
-          [:fx/search (state :state/query)]
+             (= kbd-key "Enter"))
+          [:fx/search (state :state/city-search-req)]
           nil)]
+    
+    [new-state new-effect]))
+
+(defn- handle-event-execute-city-search
+  "Execute query 
+   - No state change
+   - Trigger search effect with query value"
+  [state _event-arg]
+
+  (let [new-state state
+
+        new-effect
+        [:fx/search (new-state :state/city-search-req)]]
 
     [new-state new-effect]))
 
-(defn- handle-event-take-search-result
-  [state event-arg]
+(defn- handle-event-take-city-search-response
+  "Take search response:
+   - State change: convert response to result (extract location and status)
+   - No effect"
+  [state [ok? city-search-resp :as _event-arg]]
 
-  (let [new-state (assoc state
-         :state/location (event-arg :ev/name)
-         :state/failed (event-arg :ev/failed))
-    
+  (let [new-state
+        (assoc state
+               :state/location (-> city-search-resp
+                                   (first)
+                                   (get "LocalizedName"))
+               :state/failed   (not ok?))
         new-effect nil]
-    
+
     [new-state new-effect]))
 
 (defn update-fn
@@ -119,14 +110,17 @@
 
   (condp = event-key
 
-    :ev/change-query 
+    :ev/change-query
     (handle-event-change-query state event-arg)
 
-    :ev/execute-query
-    (handle-event-execute-query state event-arg)
+    :ev/send-city-search-req
+    (handle-event-send-city-search-req state event-arg)
 
-    :ev/take-search-result
-    (handle-event-take-search-result state event-arg)))
+    :ev/execute-city-search
+    (handle-event-execute-city-search state event-arg)
+
+    :ev/take-city-search-response
+    (handle-event-take-city-search-response state event-arg)))
 
 ;; View
 
@@ -138,9 +132,9 @@
     [:input.search-txt
      {:type "text"
       :on-change #(dispatch [:ev/change-query (.-value (.-target %))])
-      :on-key-down #(dispatch [:ev/execute-query (.-key %)])}]
+      :on-key-down #(dispatch [:ev/send-city-search-req (.-key %)])}]
     [:button.search-btn
-     {:on-click #(dispatch [:ev/execute-query "Enter"])}
+     {:on-click #(dispatch [:ev/send-city-search-req "Enter"])}
      "Search"]
     (if (state-val :state/failed)
       [:span.search-warn "⚠️"]
