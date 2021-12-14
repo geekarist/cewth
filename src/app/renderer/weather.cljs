@@ -1,6 +1,7 @@
 (ns app.renderer.weather
   (:require
-   [ajax.core :as ajx]))
+   [ajax.core :as ajx]
+   [clojure.string :as str]))
 
 ;; Effects
 
@@ -28,7 +29,12 @@
       {:ev/failed (not ok?)
        :ev/name (-> city-search-resp
                     (first)
-                    (get "LocalizedName"))})]
+                    (get "LocalizedName"))})
+
+     #_(4. Dispatch query result)
+     (dispatch-query-result
+      [query-result]
+      (dispatch [:ev/take-search-result query-result]))]
 
     #_(Wire up steps)
     (-> query
@@ -37,7 +43,7 @@
          (fn [city-search-resp]
            (-> city-search-resp
                (to-query-result)
-               (dispatch)))))))
+               (dispatch-query-result)))))))
 
 ;; Handle effects
 
@@ -46,8 +52,7 @@
   [[effect-key effect-arg :as _effect-vec]
    dispatch]
   (condp = effect-key
-    :fx/execute-query (search! effect-arg
-                               #(dispatch [:ev/take-search-result %]))
+    :fx/search (search! effect-arg dispatch)
     nil #_(Ignore nil effect)))
 
 ;; State
@@ -67,6 +72,14 @@
   (condp = event-key
     
     :ev/change-query (assoc state :state/query event-arg)
+    
+    ;; If query is empty, clear result
+    :ev/execute-query
+    (if (str/blank? (state :state/query))
+      (assoc state
+             :state/location nil
+             :state/failed nil)
+      state)
 
     :ev/take-search-result
     (assoc state
@@ -81,8 +94,10 @@
   (condp = event-key
 
     :ev/execute-query
-    (if (= event-arg "Enter")
-      [:fx/execute-query (state :state/query)]
+    ;; If query is empty, don't search
+    (if (and (not (str/blank? (state :state/query)))
+             (= event-arg "Enter"))
+      [:fx/search (state :state/query)]
       nil)
 
     nil))
