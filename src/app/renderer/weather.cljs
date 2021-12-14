@@ -73,47 +73,60 @@
 
 ;; Update
 
-(defn- update-state [[event-key event-arg :as _event] state]
-  
-  (condp = event-key
+(defn- handle-event-change-query 
+  "Change query ⇒ add query value"
+  [state event-arg]
+  (let [new-state (assoc state :state/query event-arg)
+        new-effect nil]
+    [new-state new-effect]))
 
-    :ev/change-query (assoc state :state/query event-arg) ;; TODO (handle-change-query event state)
+(defn- handle-event-execute-query
+  "Execute query 
+   - Clear result properties if query is blank
+   - Trigger search effect with query value"
+  [state event-arg]
 
-    ;; If query is empty, clear result
-    :ev/execute-query ;; TODO (handle-execute-query event state)
-    (if (str/blank? (state :state/query))
-      (assoc state
-             :state/location nil
-             :state/failed nil)
-      state)
+  (let [new-state
+        (if (str/blank? (state :state/query))
+          (assoc state
+                 :state/location nil
+                 :state/failed nil)
+          state)
 
-    :ev/take-search-result ;; TODO (handle-search-result event state)
-    (assoc state
-           :state/location (event-arg :ev/name)
-           :state/failed (event-arg :ev/failed))
-
-    state))
-
-(defn- create-effect [[event-key event-arg :as _event] state]
-
-  (println _event)
-  (condp = event-key
-
-    :ev/execute-query
-    ;; If query is empty, don't search
-    (if (and (not (str/blank? (state :state/query)))
+        new-effect
+        (if (and
+             (not (str/blank? (state :state/query)))
              (= event-arg "Enter"))
-      [:fx/search (state :state/query)]
-      nil)
+          [:fx/search (state :state/query)]
+          nil)]
 
-    nil))
+    [new-state new-effect]))
+
+(defn- handle-event-take-search-result
+  [state event-arg]
+
+  (let [new-state (assoc state
+         :state/location (event-arg :ev/name)
+         :state/failed (event-arg :ev/failed))
+    
+        new-effect nil]
+    
+    [new-state new-effect]))
 
 (defn update-fn
   "Pure state update function"
-  [event state]
-  (let [new-state (update-state  event state)
-        effect    (create-effect event new-state)]
-    [new-state effect]))
+  [[event-key event-arg :as _event] state]
+
+  (condp = event-key
+
+    :ev/change-query 
+    (handle-event-change-query state event-arg)
+
+    :ev/execute-query
+    (handle-event-execute-query state event-arg)
+
+    :ev/take-search-result
+    (handle-event-take-search-result state event-arg)))
 
 ;; View
 
