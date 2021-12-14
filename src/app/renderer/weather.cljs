@@ -76,22 +76,22 @@
 (defn- update-state [[event-key event-arg :as _event] state]
   
   (condp = event-key
-    
-    :ev/change-query (assoc state :state/query event-arg)
-    
+
+    :ev/change-query (assoc state :state/query event-arg) ;; TODO (handle-change-query event state)
+
     ;; If query is empty, clear result
-    :ev/execute-query
+    :ev/execute-query ;; TODO (handle-execute-query event state)
     (if (str/blank? (state :state/query))
       (assoc state
              :state/location nil
              :state/failed nil)
       state)
 
-    :ev/take-search-result
+    :ev/take-search-result ;; TODO (handle-search-result event state)
     (assoc state
            :state/location (event-arg :ev/name)
            :state/failed (event-arg :ev/failed))
-    
+
     state))
 
 (defn- create-effect [[event-key event-arg :as _event] state]
