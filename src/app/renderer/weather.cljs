@@ -8,7 +8,7 @@
 
 ;; Update
 
-(defn- update-fn
+(defn update-fn
   "Pure state update function"
   [[action arg :as message]
    state]
@@ -20,7 +20,7 @@
 
 ;; View
 
-(defn- view-fn
+(defn view-fn
   "View function. Pure function operating on a state value."
   [dispatch state-val]
   [:div.root-ctn
@@ -43,8 +43,6 @@
      [:span.unit-lbl (state-val :temperature-unit)]]
     [:div.weather-text-blk (state-val :weather-text)]
     [:div.update-date-blk (state-val :updated-at)]]])
-
-(declare dispatch)
 
 ;; Effects
 
@@ -89,7 +87,7 @@
              #(dispatch [:ev/take-search-result %] state-ref))
     nil))
 
-(defn- handle 
+(defn handle
   "Effect handler. Individual effects are applied here."
   [[effect-key effect-arg :as _effect-vec]
    state-ref
@@ -97,20 +95,3 @@
   (condp = effect-key
     :fx/execute-query (execute-query! effect-arg state-ref dispatch)
     nil #_(Ignore nil effect)))
-
-;; Runtime/support
-
-(defn view
-  "View component. Operates on a reagent state atom. 
-   Called each time the atom is changed."
-  [state-ref]
-  (let [dispatch-event (fn [event] (dispatch event state-ref))]
-    (view-fn dispatch-event @state-ref)))
-
-(defn- dispatch 
-  "Event dispatch function. Allows a view or effect to dispatch an event."
-  [action state-ref]
-  (let [new-state-vec (update-fn action @state-ref)
-        [new-state effect] new-state-vec]
-    (compare-and-set! state-ref @state-ref new-state)
-    (handle effect state-ref dispatch)))
