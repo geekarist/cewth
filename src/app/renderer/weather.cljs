@@ -75,7 +75,7 @@
 ;; View
 
 (defn view-fn
-  "View function. Pure function operating on a state value."
+  "View function. Pure function operating on a state value"
   [dispatch state-val]
   [:div.root-ctn
    [:div.search-ctn

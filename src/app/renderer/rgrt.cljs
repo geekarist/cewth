@@ -1,5 +1,5 @@
 (ns app.renderer.rgrt
-  "Reagent runtime functions"
+  "Reagent runtime"
   (:require [reagent.dom :as rd]
             [reagent.core :as rc]))
 
@@ -15,8 +15,7 @@
     (view-fn dispatch-event @state-ref)))
 
 (defn run-program
-  "Create and run a program
-   
+  "Create and run a program:
    - `init`: initial state data
    - `update-fn`: state update function
    - `view-fn`: view function
