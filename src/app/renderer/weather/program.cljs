@@ -37,9 +37,6 @@
     :ev/send-city-search-req
     (handle-event/send-city-search-req state event-arg)
 
-    :ev/execute-city-search
-    (handle-event/execute-city-search state event-arg)
-
     :ev/take-city-search-response
     (handle-event/take-city-search-response state event-arg)))
 

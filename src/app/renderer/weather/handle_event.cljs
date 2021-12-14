@@ -41,19 +41,6 @@
 
     [new-state new-effect]))
 
-(defn execute-city-search
-  "Execute query 
-   - No state change
-   - Effect: search provided request"
-  [state req]
-
-  (let [new-state state
-
-        new-effect
-        [:fx/search req]]
-
-    [new-state new-effect]))
-
 (defn take-city-search-response
   "Take search response:
    - State change: convert response to result (extract location and status)
