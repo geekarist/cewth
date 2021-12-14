@@ -1,4 +1,5 @@
 (ns app.renderer.rgrt
+  "Reagent runtime functions"
   (:require [reagent.dom :as rd]
             [reagent.core :as rc]))
 
@@ -13,7 +14,14 @@
                            (handle effect state-ref dispatch)))]
     (view-fn dispatch-event @state-ref)))
 
-(defn make-program [init update-fn view-fn handle]
+(defn run-program
+  "Create and run a program
+   
+   - `init`: initial state data
+   - `update-fn`: state update function
+   - `view-fn`: view function
+   - `handle`: map keys to effects"
+  [init update-fn view-fn handle]
   (rd/render
    [view-component (rc/atom init) update-fn view-fn handle]
    (js/document.getElementById  "app-container")))
