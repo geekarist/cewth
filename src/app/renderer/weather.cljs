@@ -25,8 +25,8 @@
      #_(3. Convert city search response to query result)
      (to-query-result
       [[ok? city-search-resp]]
-      {:failed (not ok?)
-       :name (-> city-search-resp
+      {:fx/failed (not ok?)
+       :fx/name (-> city-search-resp
                  (first)
                  (get "LocalizedName"))})]
 
@@ -41,7 +41,7 @@
 
 (defn- execute-query! [trigger state-ref dispatch]
   (if (= trigger "Enter")
-    (search! (@state-ref :query)
+    (search! (@state-ref :state/query)
              #(dispatch [:ev/take-search-result %] state-ref))
     nil))
 
@@ -58,7 +58,13 @@
 
 ;; State
 
-(def init {})
+(def init {:state/location nil
+           :state/icon-src nil
+           :state/query nil
+           :state/temperature-unit nil
+           :state/temperature-val nil
+           :state/updated-at nil
+           :state/weather-text nil})
 
 ;; Update
 
@@ -67,9 +73,11 @@
   [[action arg :as message]
    state]
   (condp = action
-    :ev/change-query [(assoc state :query arg) nil]
-    :ev/execute-query [state [:fx/execute-query arg (state :query)]]
-    :ev/take-search-result [(assoc state :location (arg :name)) nil]
+    :ev/change-query [(assoc state :state/query arg) nil]
+    :ev/execute-query [state [:fx/execute-query arg (state :state/query)]]
+    :ev/take-search-result [(assoc state 
+                                   :state/location (arg :fx/name)
+                                   :state/failed (arg :fx/failed)) nil]
     (println "Unknown action:" message)))
 
 ;; View
@@ -86,15 +94,15 @@
     [:button.search-btn
      {:on-click #(dispatch [:ev/execute-query "Enter"])}
      "Search"]
-    (if (state-val :failed)
+    (if (state-val :state/failed)
       [:span.search-warn "⚠️"]
       nil)]
    [:div.result-ctn
-    [:div.location-ctn (state-val :location)]
+    [:div.location-ctn (state-val :state/location)]
     [:div.temperature-ctn
-     [:img.weather-icn {:src (state-val :icon-src)}]
-     [:span.temperature-lbl (state-val :temperature-val)]
-     [:span.unit-lbl (state-val :temperature-unit)]]
-    [:div.weather-text-blk (state-val :weather-text)]
-    [:div.update-date-blk (state-val :updated-at)]]])
+     [:img.weather-icn {:src (state-val :state/icon-src)}]
+     [:span.temperature-lbl (state-val :state/temperature-val)]
+     [:span.unit-lbl (state-val :state/temperature-unit)]]
+    [:div.weather-text-blk (state-val :state/weather-text)]
+    [:div.update-date-blk (state-val :state/updated-at)]]])
 
