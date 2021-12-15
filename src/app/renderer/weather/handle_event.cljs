@@ -53,6 +53,17 @@
                                    (first)
                                    (get "LocalizedName"))
                :state/failed   (not ok?))
-        new-effect nil]
-
+        
+        new-effect [:fx/current-conditions
+                    {:uri (str "http://localhost:3000"
+                               "/dataservice.accuweather.com"
+                               "/currentconditions/v1/"
+                               (-> city-search-resp
+                                   (first)
+                                   (get "Key")))
+                     :method :get
+                     :params {:api-key "TODO"}
+                     :format (ajx/json-request-format)
+                     :response-format (ajx/json-response-format)}]]
+    
     [new-state new-effect]))

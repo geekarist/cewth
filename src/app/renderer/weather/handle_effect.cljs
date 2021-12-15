@@ -10,3 +10,5 @@
           (fn [result]
             (dispatch [:ev/take-city-search-response result])))))
 
+(defn current-conditions! [req _dispatch]
+  (println "In current-conditions!: arg = [" req "]"))

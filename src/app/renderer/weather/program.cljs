@@ -21,6 +21,8 @@
    dispatch]
   (condp = effect-key
     :fx/search (handle-effect/search! effect-arg dispatch)
+    :fx/current-conditions
+    (handle-effect/current-conditions! effect-arg dispatch)
     nil #_(Ignore nil effect)))
 
 ;; Update
