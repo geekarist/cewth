@@ -1,6 +1,8 @@
 (ns app.renderer.weather.handle-event
   (:require [ajax.core :as ajx]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [goog.string :as gstr]
+            [goog.string.format]))
 
 (defn change-query
   "Change query field:
@@ -8,7 +10,17 @@
    - No effect"
   [state query]
 
-  (let [new-state (assoc state :state/query query)
+  (let [new-state 
+        (assoc state 
+               :state/query query
+               :state/failed nil
+               :state/icon-src nil
+               :state/location nil
+               :state/temperature-unit nil
+               :state/temperature-val nil
+               :state/updated-at nil
+               :state/weather-text nil)
+        
         new-effect nil]
     [new-state new-effect]))
 
@@ -48,22 +60,49 @@
   [state [ok? city-search-resp :as _event-arg]]
 
   (let [new-state
+        (if (empty? city-search-resp)
+          (assoc state
+                 :state/location "Not found"
+                 :state/failed   (not ok?))
+          (assoc state
+                 :state/location (-> city-search-resp
+                                     (first)
+                                     (get "LocalizedName"))
+                 :state/failed   (not ok?)))
+
+        new-effect
+        (if (seq city-search-resp)
+          [:fx/current-conditions
+           {:uri (str "http://localhost:3000"
+                      "/dataservice.accuweather.com"
+                      "/currentconditions/v1/"
+                      (-> city-search-resp
+                          (first)
+                          (get "Key")))
+            :method :get
+            :params {:api-key "TODO"}
+            :format (ajx/json-request-format)
+            :response-format (ajx/json-response-format)}]
+          nil)]
+    
+    [new-state new-effect]))
+
+(defn take-current-conditions-response
+  [state [_ok? current-conditions-resp :as _event-arg]]
+
+  (let [new-state
         (assoc state
-               :state/location (-> city-search-resp
-                                   (first)
-                                   (get "LocalizedName"))
-               :state/failed   (not ok?))
-        
-        new-effect [:fx/current-conditions
-                    {:uri (str "http://localhost:3000"
-                               "/dataservice.accuweather.com"
-                               "/currentconditions/v1/"
-                               (-> city-search-resp
-                                   (first)
-                                   (get "Key")))
-                     :method :get
-                     :params {:api-key "TODO"}
-                     :format (ajx/json-request-format)
-                     :response-format (ajx/json-response-format)}]]
+               :state/temperature-val (-> current-conditions-resp
+                                          (first)
+                                          (get "Temperature")
+                                          (get "Metric")
+                                          (get "Value"))
+               :state/temperature-unit (-> current-conditions-resp
+                                           (first)
+                                           (get "Temperature")
+                                           (get "Metric")
+                                           (get "Unit")))
+
+        new-effect nil]
     
     [new-state new-effect]))
