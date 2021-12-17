@@ -7,12 +7,12 @@
   "View component. Operates on a reagent state atom. 
    Called each time the atom is changed."
   [state-ref update-fn view-fn handle-effect!]
-  (let [dispatch-event!
-        (fn dispatch! [event]
-          (let [new-state-vec (update-fn event @state-ref)
-                [new-state effect] new-state-vec]
-            (compare-and-set! state-ref @state-ref new-state)
-            (handle-effect! effect dispatch!)))]
+  (letfn [(dispatch-event!
+            [event]
+            (let [new-state-vec (update-fn event @state-ref)
+                  [new-state effect] new-state-vec]
+              (compare-and-set! state-ref @state-ref new-state)
+              (handle-effect! effect dispatch-event!)))]
     (view-fn dispatch-event! @state-ref)))
 
 (defn run-program
