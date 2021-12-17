@@ -3,12 +3,16 @@
 
 ;; Effects
 
-(defn search! [req dispatch]
+(defn search! [req dispatch!]
   (ajx/ajax-request
    (assoc req
           :handler
-          (fn [result]
-            (dispatch [:ev/take-city-search-response result])))))
+          (fn [response]
+            (dispatch! [:ev/take-city-search-response response])))))
 
-(defn current-conditions! [req _dispatch]
-  (println "In current-conditions!: arg = [" req "]"))
+(defn current-conditions! [req dispatch!]
+  (ajx/ajax-request
+   (assoc req
+          :handler
+          (fn [response]
+            (dispatch! [:ev/take-current-conditions-response response])))))

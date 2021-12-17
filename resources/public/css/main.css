@@ -54,6 +54,7 @@ body {
 .unit-lbl {
   font-size: xxx-large;
   margin-right: auto;
+  margin-left: 8px;
 }
 
 .weather-text-blk {

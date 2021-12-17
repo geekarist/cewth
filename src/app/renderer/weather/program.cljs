@@ -18,11 +18,11 @@
 (defn handle-effect!
   "Effect handler. Individual effects are applied here."
   [[effect-key effect-arg :as _effect-vec]
-   dispatch]
+   dispatch!]
   (condp = effect-key
-    :fx/search (handle-effect/search! effect-arg dispatch)
+    :fx/search (handle-effect/search! effect-arg dispatch!)
     :fx/current-conditions
-    (handle-effect/current-conditions! effect-arg dispatch)
+    (handle-effect/current-conditions! effect-arg dispatch!)
     nil #_(Ignore nil effect)))
 
 ;; Update
@@ -40,21 +40,24 @@
     (handle-event/send-city-search-req state event-arg)
 
     :ev/take-city-search-response
-    (handle-event/take-city-search-response state event-arg)))
+    (handle-event/take-city-search-response state event-arg)
+
+    :ev/take-current-conditions-response
+    (handle-event/take-current-conditions-response state event-arg)))
 
 ;; View
 
 (defn view-fn
   "View function. Pure function operating on a state value"
-  [dispatch state-val]
+  [dispatch! state-val]
   [:div.root-ctn
    [:div.search-ctn
     [:input.search-txt
      {:type "text"
-      :on-change #(dispatch [:ev/change-query (.-value (.-target %))])
-      :on-key-down #(dispatch [:ev/send-city-search-req (.-key %)])}]
+      :on-change #(dispatch! [:ev/change-query (.-value (.-target %))])
+      :on-key-down #(dispatch! [:ev/send-city-search-req (.-key %)])}]
     [:button.search-btn
-     {:on-click #(dispatch [:ev/send-city-search-req "Enter"])}
+     {:on-click #(dispatch! [:ev/send-city-search-req "Enter"])}
      "Search"]
     (if (state-val :state/failed)
       [:span.search-warn "⚠️"]
