@@ -1,7 +1,11 @@
 (ns app.renderer.weather.handle-effect
-  (:require [ajax.core :as ajx]))
+  (:require [ajax.core :as ajx]
+            [tick.core :as t]))
 
 ;; Effects
+
+(defn request-current-time! [dispatch!]
+  (dispatch! [:ev/take-current-date-response (t/zoned-date-time)]))
 
 (defn search! [req dispatch!]
   (ajx/ajax-request

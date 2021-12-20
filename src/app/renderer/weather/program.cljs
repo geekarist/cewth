@@ -20,9 +20,15 @@
   [[effect-key effect-arg :as _effect-vec]
    dispatch!]
   (condp = effect-key
+    
     :fx/search (handle-effect/search! effect-arg dispatch!)
+    
     :fx/current-conditions
     (handle-effect/current-conditions! effect-arg dispatch!)
+
+    :fx/request-current-time
+    (handle-effect/request-current-time! dispatch!)
+
     nil #_(Ignore nil effect)))
 
 ;; Update
@@ -43,7 +49,10 @@
     (handle-event/take-city-search-response state event-arg)
 
     :ev/take-current-conditions-response
-    (handle-event/take-current-conditions-response state event-arg)))
+    (handle-event/take-current-conditions-response state event-arg)
+    
+    :ev/take-current-date-response
+    (handle-event/take-current-date-response state event-arg)))
 
 ;; View
 
