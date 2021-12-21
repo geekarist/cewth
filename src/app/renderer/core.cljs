@@ -1,7 +1,8 @@
 (ns app.renderer.core
   (:require
    [app.renderer.weather.program :as wp]
-   [app.renderer.rgrt :as rgrt]))
+   [app.renderer.rgrt :as rgrt]
+   ["moment" :as moment]))
 
 (enable-console-print!)
 
@@ -12,4 +13,8 @@
                     wp/handle-effect!))
 
 (comment
-  start!)
+  (start!)
+  (moment)
+  (-> (moment)
+      (.format "dddd"))
+  (.format (moment) "dddd"))
