@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [goog.string :as gstr]
             [goog.string.format]
-            [tick.core :as t]))
+            [tick.core :as t]
+            [tick.locale-en-us]))
 
 (defn change-query
   "Change query field:
@@ -112,13 +113,13 @@
     [new-state new-effect]))
 
 (defn- parse-timestamp [zoned-date-time]
-  (t/format :iso-zoned-date-time zoned-date-time))
+  (t/format (t/formatter "yyyy/MM/dd HH:mm") zoned-date-time))
   
 (defn take-current-date-response [state zoned-date-time]
 
   (let [new-state (assoc state
                          :state/updated-at
-                         (gstr/format "Updated at %s"
+                         (gstr/format "Last update: %s"
                                       (parse-timestamp zoned-date-time)))
         new-effect nil]
 
