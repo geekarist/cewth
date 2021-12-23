@@ -56,27 +56,35 @@
 
 ;; View
 
+(defn search-widget-view-fn
+  [dispatch! state-val]
+  [:div.search-ctn
+   [:input.search-txt
+    {:type "text"
+     :on-change #(dispatch! [:ev/change-query (.-value (.-target %))])
+     :on-key-down #(dispatch! [:ev/send-city-search-req (.-key %)])}]
+   [:button.search-btn
+    {:on-click #(dispatch! [:ev/send-city-search-req "Enter"])}
+    "Search"]
+   (if (state-val :state/failed)
+     [:span.search-warn "⚠️"]
+     nil)])
+
+(defn search-result-view-fn
+  [_dispatch! state-val]
+  [:div.result-ctn
+   [:div.location-ctn (state-val :state/location)]
+   [:div.temperature-ctn
+    [:img.weather-icn {:src (state-val :state/icon-src)}]
+    [:span.temperature-lbl (state-val :state/temperature-val)]
+    [:span.unit-lbl (state-val :state/temperature-unit)]]
+   [:div.weather-text-blk (state-val :state/weather-text)]
+   [:div.update-date-blk (state-val :state/updated-at)]])
+
 (defn view-fn
   "View function. Pure function operating on a state value"
   [dispatch! state-val]
   [:div.root-ctn
-   [:div.search-ctn
-    [:input.search-txt
-     {:type "text"
-      :on-change #(dispatch! [:ev/change-query (.-value (.-target %))])
-      :on-key-down #(dispatch! [:ev/send-city-search-req (.-key %)])}]
-    [:button.search-btn
-     {:on-click #(dispatch! [:ev/send-city-search-req "Enter"])}
-     "Search"]
-    (if (state-val :state/failed)
-      [:span.search-warn "⚠️"]
-      nil)]
-   [:div.result-ctn
-    [:div.location-ctn (state-val :state/location)]
-    [:div.temperature-ctn
-     [:img.weather-icn {:src (state-val :state/icon-src)}]
-     [:span.temperature-lbl (state-val :state/temperature-val)]
-     [:span.unit-lbl (state-val :state/temperature-unit)]]
-    [:div.weather-text-blk (state-val :state/weather-text)]
-    [:div.update-date-blk (state-val :state/updated-at)]]])
+   (search-widget-view-fn dispatch! state-val)
+   (search-result-view-fn dispatch! state-val)])
 
